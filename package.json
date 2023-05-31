@@ -1,13 +1,19 @@
 {
   "name": "copy-or-move",
+  "type": "commonjs",
   "version": "0.1.0",
+  "scripts": {
+    "test": "jest"
+  },
   "engines": {
     "node": ">=18.x"
   },
-  "type": "module",
   "bootcamp": {
     "createdAt": "2023-05-23T20:36:59.351Z",
     "version": "6.2.0",
     "commit": "72102eace3774112f75ba4d60888eb295d7a4949"
+  },
+  "dependencies": {
+    "jest": "^29.5.0"
   }
 }
