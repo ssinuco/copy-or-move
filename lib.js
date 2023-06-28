@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const getPathType = (source) => {
+const getSourcePathType = (source) => {
   // return promise
   return new Promise((resolve, reject) => {
     // check if source is a file or directory
@@ -12,6 +12,27 @@ const getPathType = (source) => {
       }
       if (!stats) {
         return reject(new Error(`No such file or directory ${source}`));
+      }
+      return resolve(stats.isFile() ? 'file' : 'folder');
+    });
+  });
+};
+
+const getDestinationType = (destination) => {
+  return new Promise((resolve, reject) => {
+    fs.stat(destination, (err, stats) => {
+      if (err && err.code !== 'ENOENT') {
+        return reject(err);
+      }
+      if (!stats) {
+        //validate if parent folder exists
+        const parentFolder = path.dirname(destination);
+        if (fs.existsSync(parentFolder)) {
+          return resolve('file');
+        }
+        else {
+          return reject(new Error(`No such file or directory ${destination}`));
+        }
       }
       return resolve(stats.isFile() ? 'file' : 'folder');
     });
@@ -49,10 +70,10 @@ const createDirectory = (dirname) => {
 // copy file
 const executeOperation = (file, newFile, operation) => {
   const dirname = path.dirname(newFile);
-  
+
   return new Promise((resolve, reject) => {
     createDirectory(dirname)
-      .then(() => {
+      .finally(() => { //finally is called even if createDirectory fails
         operation(file, newFile, (err) => {
           if (err) {
             reject(err);
@@ -67,8 +88,8 @@ const doOperation = (source, destination, operation) => {
   // check if source and destination exist
   return Promise.all(
     [
-      getPathType(source),
-      getPathType(path.dirname(destination)),
+      getSourcePathType(source),
+      getDestinationType(destination),
     ]
   )
     .then(([sourceType, destinationType]) => {
@@ -76,33 +97,28 @@ const doOperation = (source, destination, operation) => {
       let filesFromSource = [];
       let destinationFolder = null;
       let destinationFileName = null;
-      if (sourceType === 'file' && destinationType === 'file') {
+      if (sourceType === 'file') {
         sourceFolder = path.dirname(source);
         filesFromSource.push(source);
-        destinationFolder = path.dirname(destination);
-        destinationFileName = path.basename(destination);
+        if (destinationType === 'folder') {
+          destinationFolder = destination;
+          destinationFileName = path.basename(source);
+        }
+        else {
+          destinationFolder = path.dirname(destination);
+          destinationFileName = path.basename(destination);
+        }
       }
-      else if (sourceType === 'file' && destinationType === 'folder') {
-        sourceFolder = path.dirname(source);
-        filesFromSource.push(source);
-        destinationFolder = destination;
-        destinationFileName = path.basename(source);
-      }
-      else if (sourceType === 'folder' && destinationType === 'folder') {
+      else {
         sourceFolder = source;
         filesFromSource = getFilesFromDirectory(source);
         destinationFolder = destination;
       }
-      else {
-        throw new Error('Copy from folder to file is not allowed');
-      }
-
       return Promise.all(filesFromSource.map(file => {
         const newPath = path.join(destinationFolder, path.dirname(path.relative(sourceFolder, file)));
         const newFileName = destinationFileName ?? path.basename(file);
         return executeOperation(file, path.join(newPath, newFileName), operation);
       }));
-
     });
 };
 

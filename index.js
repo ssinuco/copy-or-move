@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 //Get parameters from command line
 const args = process.argv.slice(2);
 const source = args[0];

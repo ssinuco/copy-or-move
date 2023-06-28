@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "jest": "^29.5.0"
+  },
+  "bin": {
+    "copy-or-move": "./index.js"
   }
 }

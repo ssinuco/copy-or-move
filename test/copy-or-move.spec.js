@@ -1,4 +1,4 @@
-const { copy, move, getFilesFromDirectory } = require('../lib.js');
+const { copy, move } = require('../lib.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -36,9 +36,9 @@ describe('copy', () => {
 
     return copy(source, destination)
       .then(() => {
-        const destinationFiles = getFilesFromDirectory(DESTINATION_FOLDER);
-        expect(destinationFiles.length).toBe(1);
-        expect(destinationFiles).toContain(`${DESTINATION_FOLDER}/test.txt`);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(true);
+
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt`)).toBe(true);
       });
   });
 
@@ -48,15 +48,37 @@ describe('copy', () => {
 
     return copy(source, destination)
       .then(() => {
-        const sourceFiles = getFilesFromDirectory(SOURCE_FOLDER);
-        expect(sourceFiles.length).toBe(2);
-        expect(sourceFiles).toContain(`${SOURCE_FOLDER}/test.txt`);
-        expect(sourceFiles).toContain(`${SOURCE_FOLDER}/subfolder/newtest.txt`);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(true);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/subfolder/newtest.txt`)).toBe(true);
 
-        const destinationFiles = getFilesFromDirectory(DESTINATION_FOLDER);
-        expect(destinationFiles.length).toBe(2);
-        expect(destinationFiles).toContain(`${DESTINATION_FOLDER}/test.txt`);
-        expect(destinationFiles).toContain(`${DESTINATION_FOLDER}/subfolder/newtest.txt`);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt`)).toBe(true);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/subfolder/newtest.txt`)).toBe(true);
+      });
+  });
+
+  it('Copy file to file', async () => {
+    const source = `${SOURCE_FOLDER}/test.txt`;
+    const destination = `${DESTINATION_FOLDER}/test.txt`;
+
+    return copy(source, destination)
+      .then(() => {
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(true);
+
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt`)).toBe(true);
+      });
+  });
+
+  it('Copy folder to file', async () => {
+    const source = `${SOURCE_FOLDER}/`;
+    const destination = `${DESTINATION_FOLDER}/test.txt`;
+
+    return copy(source, destination)
+      .then(() => {
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(true);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/subfolder/newtest.txt`)).toBe(true);
+
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt/test.txt`)).toBe(true);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt/subfolder/newtest.txt`)).toBe(true);
       });
   });
 
@@ -81,12 +103,9 @@ describe('move', () => {
 
     return move(source, destination)
       .then(() => {
-        const sourceFiles = getFilesFromDirectory(SOURCE_FOLDER);
-        expect(sourceFiles).not.toContain(`${DESTINATION_FOLDER}/test.txt`);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(false);
         
-        const destinationFiles = getFilesFromDirectory(DESTINATION_FOLDER);
-        expect(destinationFiles.length).toBe(1);
-        expect(destinationFiles).toContain(`${DESTINATION_FOLDER}/test.txt`);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt`)).toBe(true);
       });
   });
 
@@ -96,13 +115,37 @@ describe('move', () => {
 
     return move(source, destination)
       .then(() => {
-        const sourceFiles = getFilesFromDirectory(SOURCE_FOLDER);
-        expect(sourceFiles.length).toBe(0);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(false);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/subfolder/newtest.txt`)).toBe(false);
 
-        const destinationFiles = getFilesFromDirectory(DESTINATION_FOLDER);
-        expect(destinationFiles.length).toBe(2);
-        expect(destinationFiles).toContain(`${DESTINATION_FOLDER}/test.txt`);
-        expect(destinationFiles).toContain(`${DESTINATION_FOLDER}/subfolder/newtest.txt`);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt`)).toBe(true);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/subfolder/newtest.txt`)).toBe(true);
+      });
+  });
+
+  it('Move file to file', async () => {
+    const source = `${SOURCE_FOLDER}/test.txt`;
+    const destination = `${DESTINATION_FOLDER}/test.txt`;
+
+    return move(source, destination)
+      .then(() => {
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(false);
+
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt`)).toBe(true);
+      });
+  });
+
+  it('Move folder to file', async () => {
+    const source = `${SOURCE_FOLDER}/`;
+    const destination = `${DESTINATION_FOLDER}/test.txt`;
+
+    return move(source, destination)
+      .then(() => {
+        expect(fs.existsSync(`${SOURCE_FOLDER}/test.txt`)).toBe(false);
+        expect(fs.existsSync(`${SOURCE_FOLDER}/subfolder/newtest.txt`)).toBe(false);
+
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt/test.txt`)).toBe(true);
+        expect(fs.existsSync(`${DESTINATION_FOLDER}/test.txt/subfolder/newtest.txt`)).toBe(true);
       });
   });
 
